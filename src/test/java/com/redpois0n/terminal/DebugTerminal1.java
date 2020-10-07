@@ -1,14 +1,18 @@
 package com.redpois0n.terminal;
 
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.UIManager;
+import java.awt.BorderLayout;
+import java.awt.Font;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-import javax.swing.UIManager;
-
-public class DebugTerminal {
+public class DebugTerminal1 {
 
     private static Process p;
     private static PrintWriter writer;
@@ -26,10 +30,11 @@ public class DebugTerminal {
         final JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(terminal);
 
+
         terminal.addInputListener(new InputListener() {
             @Override
             public void processCommand(JTerminal terminal, char c) {
-                append(c);
+//				append(c);
             }
 
             @Override
@@ -38,52 +43,65 @@ public class DebugTerminal {
                     if (p != null) {
                         p.destroy();
                     }
-                    startShell();
+//					startShell();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         });
 
+        JTextArea textArea = new JTextArea();
+        textArea.setFont(new Font("monospaced", Font.PLAIN, 14));
+
+        textArea.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    startShell(textArea.getText());
+                }
+            }
+        });
+
+
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.addKeyListener(terminal.getKeyListener());
-        frame.add(scrollPane);
+        frame.add(textArea, BorderLayout.NORTH);
+        frame.add(scrollPane, BorderLayout.CENTER);
         frame.setSize(675, 300);
         frame.setVisible(true);
 
-        terminal.append("JTerminal Test\n");
-        terminal.append("Debug and Example\n\n");
+//		terminal.append("JTerminal Test\n");
+//		terminal.append("Debug and Example\n\n");
 
-        startShell();
+//		startShell();
 
-        append("bash test.sh\n");
+//		append("bash test.sh\n");
     }
 
-    public static void startShell() {
+    public static void startShell(String command) {
         try {
-            String shell = "bash";
+            String shell = "D:\\programs\\Git-2.28.0-64\\bin\\sh.exe";
 
             ProcessBuilder builder = new ProcessBuilder(shell);
             builder.redirectErrorStream(true);
             p = builder.start();
             writer = new PrintWriter(p.getOutputStream(), true);
+            writer.println(command);
 
-            new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        while (true) {
-                            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            new Thread(() -> {
+                try {
+                    while (true) {
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-                            String line;
+                        String line;
 
-                            while ((line = reader.readLine()) != null) {
-                                terminal.append(line + "\n");
-                            }
+                        while ((line = reader.readLine()) != null) {
+                            terminal.append(line + "\n");
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }).start();
         } catch (Exception ex) {
@@ -110,5 +128,4 @@ public class DebugTerminal {
             ex.printStackTrace();
         }
     }
-
 }
