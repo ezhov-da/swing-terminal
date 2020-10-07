@@ -69,21 +69,19 @@ public class DebugTerminal {
             p = builder.start();
             writer = new PrintWriter(p.getOutputStream(), true);
 
-            new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        while (true) {
-                            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            new Thread(() -> {
+                try {
+                    while (true) {
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-                            String line;
+                        String line;
 
-                            while ((line = reader.readLine()) != null) {
-                                terminal.append(line + "\n");
-                            }
+                        while ((line = reader.readLine()) != null) {
+                            terminal.append(line + "\n");
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }).start();
         } catch (Exception ex) {
